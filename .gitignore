@@ -1,0 +1,8 @@
+# Ignore local Postgres data directory
+/data/
+# Ignore local Redis data directory
+/redis-data/
+
+# Ignore UI data directories
+/pgadmin-data/
+/redisinsight-data/

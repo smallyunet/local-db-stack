@@ -1,0 +1,65 @@
+version: "3.8"
+
+services:
+  postgres:
+    image: postgres:16
+    container_name: dev-postgres
+    restart: always
+    environment:
+      POSTGRES_USER: devuser       # Username
+      POSTGRES_PASSWORD: devpass   # Password
+      POSTGRES_DB: devdb           # Default database
+    ports:
+      - "5432:5432"                # Port mapping (host:container)
+    volumes:
+      - ./data:/var/lib/postgresql/data  # Bind mount for data persistence
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  redis:
+    image: redis:7-alpine
+    container_name: dev-redis
+    restart: always
+    ports:
+      - "6379:6379"                # Expose Redis default port
+    volumes:
+      - ./redis-data:/data          # Persist Redis data locally
+    command: ["redis-server", "--appendonly", "yes"]
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 3s
+      retries: 5
+
+  pgadmin:
+    image: dpage/pgadmin4:latest
+    container_name: dev-pgadmin
+    restart: always
+    environment:
+      PGADMIN_DEFAULT_EMAIL: admin@example.com
+      PGADMIN_DEFAULT_PASSWORD: admin
+      # Disable login screen (single-user desktop mode)
+      PGADMIN_CONFIG_SERVER_MODE: "False"
+    ports:
+      - "5050:80"                  # Web UI at http://localhost:5050
+    volumes:
+      - ./pgadmin-data:/var/lib/pgadmin
+      - ./pgadmin-servers.json:/pgadmin4/servers.json:ro  # Pre-register servers on first start
+    depends_on:
+      - postgres
+
+  redisinsight:
+    image: redis/redisinsight:latest
+    container_name: dev-redisinsight
+    restart: always
+    ports:
+      - "5540:5540"                # Web UI at http://localhost:5540 (v2)
+    volumes:
+      - ./redisinsight-data:/data
+    depends_on:
+      - redis
+
+
