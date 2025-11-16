@@ -1,5 +1,11 @@
 version: "3.8"
 
+x-logging: &default-logging
+  driver: "json-file"
+  options:
+    max-size: "10m"   # Maximum size of a single log file
+    max-file: "5"     # Number of rotated log files to retain
+
 services:
   postgres:
     image: postgres:16
@@ -13,6 +19,7 @@ services:
       - "5432:5432"                # Port mapping (host:container)
     volumes:
       - ./data:/var/lib/postgresql/data  # Bind mount for data persistence
+    logging: *default-logging
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER}"]
       interval: 10s
@@ -28,6 +35,7 @@ services:
     volumes:
       - ./redis-data:/data          # Persist Redis data locally
     command: ["redis-server", "--appendonly", "yes"]
+    logging: *default-logging
     healthcheck:
       test: ["CMD", "redis-cli", "ping"]
       interval: 10s
@@ -50,6 +58,7 @@ services:
       - ./pgadmin-servers.json:/pgadmin4/servers.json:ro  # Pre-register servers on first start
     depends_on:
       - postgres
+    logging: *default-logging
 
   redisinsight:
     image: redis/redisinsight:latest
@@ -61,5 +70,6 @@ services:
       - ./redisinsight-data:/data
     depends_on:
       - redis
+    logging: *default-logging
 
 
